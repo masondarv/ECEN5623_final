@@ -111,6 +111,7 @@ int main( int argc, char** argv )
 	Mat max,min,inter,comp;
 	Scalar averg;
 	uchar key;
+	int debug_flag=0;
 	kernel = getStructuringElement(MORPH_CROSS, Size(3, 3));
 	//////////////////
 	Mat gray,binary,mfblur;
@@ -135,7 +136,7 @@ int main( int argc, char** argv )
 	 vector<Vec4i> lines_labeled;
 	 
 	 ///////////////////steering sys///////////////////////
-	 steering cntl(260.0f,1.0f,10000.0f,95); //set PID parameters
+	 steering cntl(75.0f,0.3f,500.0f,70); //set PID parameters
 	 double error;
 	 
 	////////////////////serial port declaration////////////
@@ -291,7 +292,8 @@ int main( int argc, char** argv )
 		}
 		
 		//////////////////updata_serial//////////////////
-		cntl.serial_update(fd);
+		if(debug_flag==0)		
+			cntl.serial_update(fd);
 		cntl.annotate(frame,frame_ori);
 		///////////////////////////////////////////
 		// imshow("his",max);
@@ -315,6 +317,14 @@ int main( int argc, char** argv )
 		if(key=='p'){
 			cntl.clear();
 			waitKey();
+		}
+		if(key=='d'){
+			if(debug_flag){
+				cntl.clear();
+				debug_flag=0;
+			}
+			else
+				debug_flag=1;
 		}
     }
 	return -1;

@@ -93,7 +93,7 @@ public:
 	
 	void speed_down(){
 		throttle = 0;
-		braking =0xe0;
+		braking =0x80;
 		steer_original *=32768;
 		unset = true;
 	}	
@@ -113,8 +113,8 @@ public:
 			putText(src,"throttle",Point(385,211),FONT_HERSHEY_COMPLEX,1.0,Scalar(0,0,255),2);
 		else if(braking>0)	
 			putText(src,"braking",Point(385,211),FONT_HERSHEY_COMPLEX,1.0,Scalar(0,0,255),2);
-		string name ="cap"+to_string(frame_cnt)+".ppm";
-		imwrite(name,src_ori);
+		//string name ="cap"+to_string(frame_cnt)+".ppm";
+		//imwrite(name,src_ori);
 		frame_cnt++;
 	}
 	
