@@ -1,4 +1,5 @@
-#pragma once
+#ifndef  __STEERING__
+#define  __STEERING__
 
 #include <list>
 #include <errno.h>
@@ -25,7 +26,6 @@ int steer_convert(double steer_original){
 		return -32760;
 	else
 		return (int)steer_original;
-		
 }
 
 class steering {
@@ -54,6 +54,30 @@ public:
 		this-> max_throttle =max;
 		this->frame_cnt =0;
 		unset = true;
+    }
+	steering() {
+		this->intergal = 0;
+		this->steering_control = 0;
+		this->pre =0;
+		this->i_param = 0.1f;
+		this->p_param = 0;
+		this->d_param = 0;
+		this-> max_throttle =100;
+		this->frame_cnt =0;
+		//cout <<"cntl constructor"<<endl;
+		unset = true;
+    }
+	steering(const steering& temp) {
+		this->intergal = temp.intergal;
+		this->steering_control = temp.steering_control;
+		this->pre =temp.pre;
+		this->i_param = temp.i_param;
+		this->p_param = temp.p_param;
+		this->d_param = temp.d_param;
+		this-> max_throttle =temp.max_throttle;
+		this->frame_cnt =temp.frame_cnt;
+		//cout <<"cntl constructor"<<endl;
+		unset = temp.unset;
     }
 
 	void clear() {
@@ -105,7 +129,7 @@ public:
 		}
 	}
 	
-	void annotate(Mat& src,Mat& src_ori){
+	void annotate(Mat& src){
 		line(src,Point(120,211),Point(  (int)(((float)steering_control/32768.0)*100.0+120.0),211),Scalar(0,0,255),10);
 		line(src,Point(120,200),Point( 120,222),Scalar(255,255,255),2);
 		
@@ -113,11 +137,12 @@ public:
 			putText(src,"throttle",Point(385,211),FONT_HERSHEY_COMPLEX,1.0,Scalar(0,0,255),2);
 		else if(braking>0)	
 			putText(src,"braking",Point(385,211),FONT_HERSHEY_COMPLEX,1.0,Scalar(0,0,255),2);
-		string name ="cap"+to_string(frame_cnt)+".ppm";
-		imwrite(name,src_ori);
+		//string name ="cap"+to_string(frame_cnt)+".ppm";
+		//imwrite(name,src);
 		frame_cnt++;
 	}
 	
 
 };
 
+#endif

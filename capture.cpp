@@ -168,7 +168,7 @@ int main( int argc, char** argv )
 	base = "Y";
 	cout<<cap.get(CAP_PROP_FRAME_WIDTH)<<"  "<<cap.get(CAP_PROP_FRAME_HEIGHT)<<endl;
 	namedWindow("cap");
-
+	Mat comb;
 	while(1)
     {
          cap >> frame_ori;
@@ -183,9 +183,11 @@ int main( int argc, char** argv )
 		labeled_area = Mat(frame.size(), CV_8UC1, Scalar(0));
 		medianBlur(frame,frame,3);
 		split(frame,RGB);
-		// imshow("R",RGB[2]);
-		// imshow("G",RGB[1]);
-		// imshow("B",RGB[0]);
+		merge(RGB,comb);
+		imshow("comb",comb);
+		imshow("R",RGB[2]);
+		imshow("G",RGB[1]);
+		imshow("B",RGB[0]);
 		
 		store = RGB[0].rowRange(126,190);
 		store = frame.colRange(187,380);
@@ -203,7 +205,7 @@ int main( int argc, char** argv )
 		threshold(R,max,30,255,THRESH_BINARY); 
 		threshold(R,min,25,255,THRESH_BINARY); 
 		max = max & RGB[2] & RGB[1] ;
-		imshow("max_thre",max);
+		imshow("max_thre",RGB[1]);
 		for(;;){
 			dilate(max,max,element,Point(-1,-1),1);
 			inter = max & min;
