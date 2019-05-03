@@ -3,7 +3,7 @@ LIB_DIRS =
 CC=g++
 
 CDEFS=
-CFLAGS= -O0 -g $(INCLUDE_DIRS) $(CDEFS)
+CFLAGS= -O0 -g $(INCLUDE_DIRS) $(CDEFS) -std=c++11
 LIBS= -lrt
 CPPLIBS=-L/usr/local/lib -lopencv_core -lopencv_flann -lopencv_video -lopencv_calib3d -lopencv_highgui
 
