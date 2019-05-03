@@ -81,9 +81,6 @@ void *Sequencer(void *threadp)
 
 	//-printf("Sequencer thread started\n");
 
-	//post the RGB and line semaphores initially to unlock the capture and image processing threads
-	sem_post(&semRGB);
-	sem_post(&semLine);
 
 	while(1)
 	{
@@ -113,13 +110,14 @@ void *Sequencer(void *threadp)
 		//-printf("Sequencer cycle %llu @ sec=%d, msec=%d\n", seqCnt, (int)(current_time_val.tv_sec-start_time_val.tv_sec), (int)current_time_val.tv_usec/USEC_PER_MSEC);
 
 		//sequence the capture and process threads at a frequency of 30 Hz
-		//post the capture thread at a frequency of 10 Hz
+		//post the capture thread at a frequency of 30 Hz
 		sem_post(&semCapture);
 		sem_post(&semProcess);
+
 		//post the control thread at a frequency of 10 Hz
 		if((seqCnt % 3) == 0) sem_post(&semControl);
 
-		//post the image show thread at a frequency of 10 Hz
+		//post the image show thread at a frequency of 5 Hz
 		if((seqCnt % 6) == 0) sem_post(&semShow);
 
 	}
@@ -134,6 +132,7 @@ void *Capture_Service(void *threadp)
 {
 	struct timeval startTime;
 	struct timeval finishTime;
+	struct timeval currTime;
 	unsigned long C_us;				//execution time in us
 	uint32_t C_ms;						//execution time in ms
 	Mat frame_original,fram_roi;
@@ -142,28 +141,56 @@ void *Capture_Service(void *threadp)
 	while(1)
 	{
 		sem_wait(&semCapture);
-		gettimeofday(&startTime, (struct timezone *)0);
+		
 		////-printf("Capture Frame release @ sec=%d, msec=%d\n", (int)(startTime.tv_sec-start_time_val.tv_sec), (int)startTime.tv_usec/USEC_PER_MSEC);
 		syslog(LOG_CRIT, "Capture Frame release @ sec=%d, msec=%d\n", (int)(startTime.tv_sec-start_time_val.tv_sec), (int)startTime.tv_usec/USEC_PER_MSEC);
 		
-		/*service code*/
-		cap >> frame_original;
-        if(frame_original.empty()) break;
-		fram_roi = frame_original.rowRange(FOV_CUT_UPPERBOUND,FOV_HEIGHT);
-		medianBlur(fram_roi,fram_roi,3);
-
-
-
 		//once the shared RGB data structure most be updated, wait for the semaphore to become available
 		sem_wait(&semRGB);
+		gettimeofday(&startTime, (struct timezone *)0);
+		
+		gettimeofday(&currTime, (struct timezone *)0);
+		syslog(LOG_CRIT, "Capture semRGB taken @ sec=%d, msec=%d\n", (int)(currTime.tv_sec-start_time_val.tv_sec), (int)currTime.tv_usec/USEC_PER_MSEC);
+		/*service code*/
+		cap >> frame_original;
+		gettimeofday(&currTime, (struct timezone *)0);
+		syslog(LOG_CRIT, "Frame Captured @ sec=%d, msec=%d\n", (int)(currTime.tv_sec-start_time_val.tv_sec), (int)currTime.tv_usec/USEC_PER_MSEC);
+		
+        if(frame_original.empty()) break;
+		fram_roi = frame_original.rowRange(FOV_CUT_UPPERBOUND,FOV_HEIGHT);
+		gettimeofday(&currTime, (struct timezone *)0);
+		syslog(LOG_CRIT, "ImageCut @ sec=%d, msec=%d\n", (int)(currTime.tv_sec-start_time_val.tv_sec), (int)currTime.tv_usec/USEC_PER_MSEC);
+		medianBlur(fram_roi,fram_roi,3);
+		gettimeofday(&currTime, (struct timezone *)0);
+		syslog(LOG_CRIT, "medianBlur @ sec=%d, msec=%d\n", (int)(currTime.tv_sec-start_time_val.tv_sec), (int)currTime.tv_usec/USEC_PER_MSEC);
+
+
+
+
+
+		
 		split(fram_roi,RGB_shared);
 		frame_original.copyTo(frame);
 		//after the RGB data structure has been updated, post the sempahore
 		sem_post(&semRGB);
 		
+		gettimeofday(&currTime, (struct timezone *)0);
+		syslog(LOG_CRIT, "Capture semRGB posted @ sec=%d, msec=%d\n", (int)(currTime.tv_sec-start_time_val.tv_sec), (int)currTime.tv_usec/USEC_PER_MSEC);
+		
 		//imshow("line",frame_original);
 		//waitKey(10);
 		/*service code end*/
+		
+		gettimeofday(&finishTime, (struct timezone *)0);
+		
+		if((finishTime.tv_sec- startTime.tv_sec)>0)
+			C_us = (USEC_PER_SEC - startTime.tv_usec)+ finishTime.tv_usec;
+		else
+			C_us = finishTime.tv_usec - startTime.tv_usec;
+			
+		C_ms = C_us / USEC_PER_MSEC;
+		syslog(LOG_CRIT, "Capture Frame C = %lu us or %d ms", C_us, C_ms);
+
 
 	
 	}
@@ -176,6 +203,7 @@ void *ImgProc_Service(void *threadp)
 {
 	struct timeval startTime;
 	struct timeval finishTime;
+	struct timeval currTime;
 	unsigned long C_us;				//execution time in us
 	uint32_t C_ms;						//execution time in ms
 	
@@ -201,7 +229,7 @@ void *ImgProc_Service(void *threadp)
 	while(1)
 	{
 		sem_wait(&semProcess);
-		gettimeofday(&startTime, (struct timezone *)0);
+		
 		////-printf("Image Processing release @ sec=%d, msec=%d\n", (int)(startTime.tv_sec-start_time_val.tv_sec), (int)startTime.tv_usec/USEC_PER_MSEC);
 		syslog(LOG_CRIT, "Image Processing release @ sec=%d, msec=%d\n", (int)(startTime.tv_sec-start_time_val.tv_sec), (int)startTime.tv_usec/USEC_PER_MSEC);
 
@@ -209,11 +237,18 @@ void *ImgProc_Service(void *threadp)
 
 		//once the shared RGB data structure most be read and used, wait for the semaphore to become available
 		sem_wait(&semRGB);
+		gettimeofday(&startTime, (struct timezone *)0);
+		
+		gettimeofday(&currTime, (struct timezone *)0);
+		syslog(LOG_CRIT, "ImgProc semRGB take @ sec=%d, msec=%d\n", (int)(currTime.tv_sec-start_time_val.tv_sec), (int)currTime.tv_usec/USEC_PER_MSEC);
+		
 		for(int i=0;i<3;i++)
 			RGB_shared[i].copyTo(RGB[i]);
 
 		//after the RGB data structure has been read and used, post the sempaphore
 		sem_post(&semRGB);
+		gettimeofday(&currTime, (struct timezone *)0);
+		syslog(LOG_CRIT, "ImgProc semRGB post @ sec=%d, msec=%d\n", (int)(currTime.tv_sec-start_time_val.tv_sec), (int)currTime.tv_usec/USEC_PER_MSEC);
 		
 		R = RGB[0]/2+RGB[1]/2-RGB[2];
 		threshold(RGB[0],RGB[0],120,255,THRESH_BINARY_INV);
@@ -303,6 +338,15 @@ void *ImgProc_Service(void *threadp)
 
 
 
+		gettimeofday(&finishTime, (struct timezone *)0);
+		
+		if((finishTime.tv_sec- startTime.tv_sec)>0)
+			C_us = (USEC_PER_SEC - startTime.tv_usec)+ finishTime.tv_usec;
+		else
+			C_us = finishTime.tv_usec - startTime.tv_usec;
+			
+		C_ms = C_us / USEC_PER_MSEC;
+		syslog(LOG_CRIT, "ImgProc C = %lu us or %d ms", C_us, C_ms);
 
 		
 
@@ -371,6 +415,17 @@ void *Control_Service(void *threadp)
 		//waitKey(1);
 		/*service code end*/
 		
+		gettimeofday(&finishTime, (struct timezone *)0);
+		
+		if((finishTime.tv_sec- startTime.tv_sec)>0)
+			C_us = (USEC_PER_SEC - startTime.tv_usec)+ finishTime.tv_usec;
+		else
+			C_us = finishTime.tv_usec - startTime.tv_usec;
+			
+		C_ms = C_us / USEC_PER_MSEC;
+		syslog(LOG_CRIT, "Control C = %lu us or %d ms", C_us, C_ms);
+		
+		
 
 	}
 
@@ -408,10 +463,21 @@ void *showProc_Service(void *threadp)
 		sem_wait(&semCntl);
 		//cntl.annotate(frame_roi);
 		sem_post(&semCntl);
-		//imshow("line",frame);
-		//key=waitKey(1);
-		//if(key == 'q')
-			//exit(0);
+		imshow("line",frame);
+		key=waitKey(1);
+		if(key == 'q')
+			exit(0);
+			
+			
+		gettimeofday(&finishTime, (struct timezone *)0);
+		
+		if((finishTime.tv_sec- startTime.tv_sec)>0)
+			C_us = (USEC_PER_SEC - startTime.tv_usec)+ finishTime.tv_usec;
+		else
+			C_us = finishTime.tv_usec - startTime.tv_usec;
+			
+		C_ms = C_us / USEC_PER_MSEC;
+		syslog(LOG_CRIT, "ShowProc C = %lu us or %d ms", C_us, C_ms);
 		
 
 	}
@@ -425,6 +491,9 @@ void *showProc_Service(void *threadp)
 
 int main( int argc, char** argv )
 {
+
+	gettimeofday(&start_time_val, (struct timezone *)0);
+	syslog(LOG_CRIT, "Self-Drive Program Start @ sec=%d, msec=%d \n \n \n \n \n \n \n", (int)(start_time_val.tv_sec), (int)start_time_val.tv_usec/USEC_PER_MSEC);
 	
 	/*serial port declaration*/
 	char *portname = "/dev/ttyUSB0";
