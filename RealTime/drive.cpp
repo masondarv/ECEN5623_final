@@ -79,7 +79,7 @@ void *Sequencer(void *threadp)
 	int rc, delay_cnt=0;
 	unsigned long long seqCnt=0;
 
-	printf("Sequencer thread started\n");
+	//-printf("Sequencer thread started\n");
 
 	//post the RGB and line semaphores initially to unlock the capture and image processing threads
 	sem_post(&semRGB);
@@ -95,7 +95,7 @@ void *Sequencer(void *threadp)
 				{
 						residual = remaining_time.tv_sec + ((double)remaining_time.tv_nsec / (double)NANOSEC_PER_SEC);
 
-						if(residual > 0.0) printf("residual=%lf, sec=%d, nsec=%d\n", residual, (int)remaining_time.tv_sec, (int)remaining_time.tv_nsec);
+						if(residual > 0.0) //-printf("residual=%lf, sec=%d, nsec=%d\n", residual, (int)remaining_time.tv_sec, (int)remaining_time.tv_nsec);
 
 						delay_cnt++;
 				}
@@ -110,7 +110,7 @@ void *Sequencer(void *threadp)
 		seqCnt++;
 
 		gettimeofday(&current_time_val, (struct timezone *)0);
-		printf("Sequencer cycle %llu @ sec=%d, msec=%d\n", seqCnt, (int)(current_time_val.tv_sec-start_time_val.tv_sec), (int)current_time_val.tv_usec/USEC_PER_MSEC);
+		//-printf("Sequencer cycle %llu @ sec=%d, msec=%d\n", seqCnt, (int)(current_time_val.tv_sec-start_time_val.tv_sec), (int)current_time_val.tv_usec/USEC_PER_MSEC);
 
 		//sequence the capture and process threads at a frequency of 30 Hz
 		//post the capture thread at a frequency of 10 Hz
@@ -120,7 +120,7 @@ void *Sequencer(void *threadp)
 		if((seqCnt % 3) == 0) sem_post(&semControl);
 
 		//post the image show thread at a frequency of 10 Hz
-		if((seqCnt % 3) == 0) sem_post(&semShow);
+		if((seqCnt % 6) == 0) sem_post(&semShow);
 
 	}
 
@@ -138,12 +138,12 @@ void *Capture_Service(void *threadp)
 	uint32_t C_ms;						//execution time in ms
 	Mat frame_original,fram_roi;
 	//RGB_shared.resize(3);
-	//printf("Capture thread started\n");
+	////-printf("Capture thread started\n");
 	while(1)
 	{
 		sem_wait(&semCapture);
 		gettimeofday(&startTime, (struct timezone *)0);
-		//printf("Capture Frame release @ sec=%d, msec=%d\n", (int)(startTime.tv_sec-start_time_val.tv_sec), (int)startTime.tv_usec/USEC_PER_MSEC);
+		////-printf("Capture Frame release @ sec=%d, msec=%d\n", (int)(startTime.tv_sec-start_time_val.tv_sec), (int)startTime.tv_usec/USEC_PER_MSEC);
 		syslog(LOG_CRIT, "Capture Frame release @ sec=%d, msec=%d\n", (int)(startTime.tv_sec-start_time_val.tv_sec), (int)startTime.tv_usec/USEC_PER_MSEC);
 		
 		/*service code*/
@@ -160,6 +160,9 @@ void *Capture_Service(void *threadp)
 		frame_original.copyTo(frame);
 		//after the RGB data structure has been updated, post the sempahore
 		sem_post(&semRGB);
+		
+		//imshow("line",frame_original);
+		//waitKey(10);
 		/*service code end*/
 
 	
@@ -176,7 +179,7 @@ void *ImgProc_Service(void *threadp)
 	unsigned long C_us;				//execution time in us
 	uint32_t C_ms;						//execution time in ms
 	
-	printf("Image Processing thread started\n");
+	//-printf("Image Processing thread started\n");
 	
 	Mat G,B,R;
 	Mat max,min,inter,comp;
@@ -199,7 +202,7 @@ void *ImgProc_Service(void *threadp)
 	{
 		sem_wait(&semProcess);
 		gettimeofday(&startTime, (struct timezone *)0);
-		//printf("Image Processing release @ sec=%d, msec=%d\n", (int)(startTime.tv_sec-start_time_val.tv_sec), (int)startTime.tv_usec/USEC_PER_MSEC);
+		////-printf("Image Processing release @ sec=%d, msec=%d\n", (int)(startTime.tv_sec-start_time_val.tv_sec), (int)startTime.tv_usec/USEC_PER_MSEC);
 		syslog(LOG_CRIT, "Image Processing release @ sec=%d, msec=%d\n", (int)(startTime.tv_sec-start_time_val.tv_sec), (int)startTime.tv_usec/USEC_PER_MSEC);
 
 
@@ -235,8 +238,8 @@ void *ImgProc_Service(void *threadp)
 			}	
 		}
 		blue_arrow_cnt = countNonZero(max);
-		imshow("max_thre",max);
-		waitKey(1);
+		//imshow("max_thre",max);
+		//waitKey(1);
 		
 		connectedComponentsWithStats(max,label,stats,centroids,8);
 		area_cnt =0;
@@ -320,12 +323,12 @@ void *Control_Service(void *threadp)
 	double k_current,b_current,error;
 	bool unset;
 	steering cntl_temp;
-	printf("Control thread started\n");
+	//-printf("Control thread started\n");
 	while(1)
 	{
 		sem_wait(&semControl);
 		gettimeofday(&startTime, (struct timezone *)0);
-		//printf("Control release @ sec=%d, msec=%d\n", (int)(startTime.tv_sec-start_time_val.tv_sec), (int)startTime.tv_usec/USEC_PER_MSEC);
+		////-printf("Control release @ sec=%d, msec=%d\n", (int)(startTime.tv_sec-start_time_val.tv_sec), (int)startTime.tv_usec/USEC_PER_MSEC);
 		syslog(LOG_CRIT, "Control release @ sec=%d, msec=%d\n", (int)(startTime.tv_sec-start_time_val.tv_sec), (int)startTime.tv_usec/USEC_PER_MSEC);
 
 
@@ -344,7 +347,7 @@ void *Control_Service(void *threadp)
 			error = 0;
 		}
 		else{
-			error = get_error(k_current,b_current,frame);
+			error = get_error(k_current,b_current);
 			cout<<"error:"<<error<<endl;
 		}
 		
@@ -359,12 +362,13 @@ void *Control_Service(void *threadp)
 		else{
 			cntl.speed_down();
 		}
-		cntl_temp =  steering(cntl);
+		cntl_temp = cntl;
 		sem_post(&semCntl);
+		//cout<<(int)cntl_temp.get_throttle()<<endl;
 		cntl_temp.serial_update(fd);
 		
 		//imshow("line",frame);
-		//waitKey(1)
+		//waitKey(1);
 		/*service code end*/
 		
 
@@ -383,28 +387,31 @@ void *showProc_Service(void *threadp)
 	unsigned long C_us;				//execution time in us
 	uint32_t C_ms;						//execution time in ms
 	Mat frame_temp,frame_roi;
-	printf("Image show thread started\n");
+	unsigned char key;
+	//-printf("Image show thread started\n");
 
 	while(1)
 	{
 		sem_wait(&semShow);
 		gettimeofday(&startTime, (struct timezone *)0);
-		//printf("Image show release @ sec=%d, msec=%d\n", (int)(startTime.tv_sec-start_time_val.tv_sec), (int)startTime.tv_usec/USEC_PER_MSEC);
+		////-printf("Image show release @ sec=%d, msec=%d\n", (int)(startTime.tv_sec-start_time_val.tv_sec), (int)startTime.tv_usec/USEC_PER_MSEC);
 		syslog(LOG_CRIT, "Image show release @ sec=%d, msec=%d\n", (int)(startTime.tv_sec-start_time_val.tv_sec), (int)startTime.tv_usec/USEC_PER_MSEC);
-		sem_wait(&semRGB);
+		//sem_wait(&semRGB);
 		//after the RGB data structure has been updated, post the sempahore
-		frame.copyTo(frame_temp);
-		sem_post(&semRGB);
+		//frame.copyTo(frame_temp);
+		//sem_post(&semRGB);
 		if(blue_arrow_cnt>=MIN_BLUE_DETECTED_TO_SPEEDUP){
-			frame_roi = frame_temp.rowRange(FOV_CUT_UPPERBOUND,FOV_HEIGHT);
+			frame_roi = frame.rowRange(FOV_CUT_UPPERBOUND,FOV_HEIGHT);
 			line(frame_roi, point1, point2, cv::Scalar(0, 255, 0), 2, 8, 0);	
 		}
-		cout <<"blue arrow "<<blue_arrow_cnt << endl;
+		//cout <<"blue arrow "<<blue_arrow_cnt << endl;
 		sem_wait(&semCntl);
-		cntl.annotate(frame_roi);
+		//cntl.annotate(frame_roi);
 		sem_post(&semCntl);
-		imshow("line",frame_temp);
-		waitKey(1);
+		//imshow("line",frame);
+		//key=waitKey(1);
+		//if(key == 'q')
+			//exit(0);
 		
 
 	}
@@ -424,7 +431,7 @@ int main( int argc, char** argv )
 	int wlen;
 	fd = open(portname, O_RDWR | O_NOCTTY | O_SYNC);
 	if (fd < 0) {
-		printf("Error opening %s: %s\n", portname, strerror(errno));
+		//-printf("Error opening %s: %s\n", portname, strerror(errno));
 		return -1;
 	}		
 	/*baudrate 115200, 8 bits, no parity, 1 stop bit */
@@ -446,6 +453,7 @@ int main( int argc, char** argv )
 		RGB_shared[i].create(ROI,CV_8UC1);
 	frame.create(Size(FOV_WIDTH,FOV_HEIGHT),CV_8UC3);
 	blue_arrow_cnt =0;
+	cntl=steering(85.0f,0.0f,330.0f,95);
 	/*set up pThreads*/
 	struct timeval current_time_val;
 	int i, rc, scope;
@@ -495,6 +503,9 @@ int main( int argc, char** argv )
 	cpu_set_t threadcpu;
 	CPU_ZERO(&threadcpu);
 	CPU_SET(0, &threadcpu);
+	CPU_SET(1, &threadcpu);
+	CPU_SET(2, &threadcpu);
+	//CPU_SET(3, &threadcpu);
 	//configure sequencer thread
 	rc=pthread_attr_init(&sequencer_sched_attr);
 	rc=pthread_attr_setinheritsched(&sequencer_sched_attr, PTHREAD_EXPLICIT_SCHED);
@@ -549,7 +560,7 @@ int main( int argc, char** argv )
 	 if(rc < 0)
 			 perror("pthread_create for capture service");
 	 else
-			 printf("pthread_create successful for capture service\n");
+			 //-printf("pthread_create successful for capture service\n");
 
 	 rc=pthread_create(&process_thread,               // pointer to thread descriptor
  										&process_sched_attr,         // use specific attributes
@@ -559,7 +570,7 @@ int main( int argc, char** argv )
 	 if(rc < 0)
 			 perror("pthread_create for image processing service");
 	 else
-			 printf("pthread_create successful for image processing service\n");
+			 //-printf("pthread_create successful for image processing service\n");
 	 rc=pthread_create(&control_thread,               // pointer to thread descriptor
  										&control_sched_attr,         // use specific attributes
  										Control_Service,                 // thread function entry point
@@ -569,7 +580,7 @@ int main( int argc, char** argv )
 	 if(rc < 0)
 			 perror("pthread_create for control service");
 	 else
-			 printf("pthread_create successful for control service\n");
+			 //-printf("pthread_create successful for control service\n");
 
 	 rc=pthread_create(&show_thread,               // pointer to thread descriptor
 										 &show_sched_attr,         // use specific attributes
@@ -580,7 +591,7 @@ int main( int argc, char** argv )
 	if(rc < 0)
 			perror("pthread_create for control service");
 	else
-			printf("pthread_create successful for control service\n");
+			//-printf("pthread_create successful for control service\n");
 
 	 rc=pthread_create(&sequencer_thread,               // pointer to thread descriptor
 											&sequencer_sched_attr,         // use specific attributes
@@ -591,7 +602,7 @@ int main( int argc, char** argv )
 	 if(rc < 0)
 			 perror("pthread_create for sequencer service");
 	 else
-			 printf("pthread_create successful for sequencer service\n");
+			 //-printf("pthread_create successful for sequencer service\n");
 
 	 pthread_join(capture_thread, NULL);
 	 pthread_join(process_thread, NULL);

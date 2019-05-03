@@ -24,6 +24,8 @@
 //#include "opencv2/ximgproc.hpp"
 #include "opencv2/imgcodecs.hpp"
 #include "opencv2/highgui.hpp"
+//#include "global.hpp"
+
 
 #include <pthread.h>
 #include <sched.h>
@@ -32,6 +34,10 @@
 
 #include <syslog.h>
 #include <sys/time.h>
+
+#define FOV_WIDTH (640)
+#define FOV_HEIGHT (480)
+#define FOV_CUT_UPPERBOUND (235)
 
 
 #define K_VARY_FACTOR 30
@@ -79,7 +85,7 @@ public:
 int set_interface_attribs(int fd, int speed);
 void print_scheduler(void);
 double k_to_theta(double k);
-double get_error (double k,double b,Mat& image);
+double get_error (double k,double b);
 
 
 #endif

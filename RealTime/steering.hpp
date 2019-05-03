@@ -44,6 +44,7 @@ private:
 	bool annotate_flag;
 	int frame_cnt;
 public:
+	
     steering(double p, double i, double d,unsigned char max) {
 		this->intergal = 0;
 		this->steering_control = 0;
@@ -59,23 +60,28 @@ public:
 		this->intergal = 0;
 		this->steering_control = 0;
 		this->pre =0;
-		this->i_param = 0.1f;
+		this->i_param = 0.5f;
 		this->p_param = 0;
 		this->d_param = 0;
-		this-> max_throttle =100;
+		this-> max_throttle =95;
 		this->frame_cnt =0;
 		//cout <<"cntl constructor"<<endl;
 		unset = true;
     }
-	steering(const steering& temp) {
+    
+	void operator = (const steering& temp) {
 		this->intergal = temp.intergal;
 		this->steering_control = temp.steering_control;
 		this->pre =temp.pre;
 		this->i_param = temp.i_param;
 		this->p_param = temp.p_param;
 		this->d_param = temp.d_param;
+		this->throttle = temp.throttle;
+		this->braking = temp.braking;
 		this-> max_throttle =temp.max_throttle;
 		this->frame_cnt =temp.frame_cnt;
+		this->steer_original =temp.steer_original;
+		this->steering_control = temp.steering_control;
 		//cout <<"cntl constructor"<<endl;
 		unset = temp.unset;
     }
@@ -112,15 +118,23 @@ public:
 	void speed_up(){
 		throttle = max_throttle;
 		braking = 0;
-		
+		//cout<<"speed up"<<endl;
+	}
+	
+	void brake(){
+		throttle = 0;
+		braking =0x80;
+		steer_original *=32768;
+		unset = true;
 	}
 	
 	void speed_down(){
-		throttle = 0;
-		braking =0xe0;
+		throttle =(unsigned char)(0.3*((float )max_throttle));
+		braking =0x00;
 		steer_original *=32768;
 		unset = true;
-	}	
+	}		
+	
 	void serial_update(int fd){
 		string data_stream ="!"+to_string(steering_control)+"@"+to_string(throttle)+"#"+to_string(braking)+"$\n";
 		int wlen = write(fd, data_stream.c_str(), data_stream.size());
@@ -129,6 +143,9 @@ public:
 		}
 	}
 	
+	unsigned char get_throttle(){
+		return throttle;
+	}
 	void annotate(Mat& src){
 		line(src,Point(120,211),Point(  (int)(((float)steering_control/32768.0)*100.0+120.0),211),Scalar(0,0,255),10);
 		line(src,Point(120,200),Point( 120,222),Scalar(255,255,255),2);
