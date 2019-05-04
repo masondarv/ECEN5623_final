@@ -23,8 +23,18 @@
 
 #define MIN_BLUE_DETECTED_TO_SPEEDUP (100)
 #define HIGH_ERROR (150)
-#define MAX_THROT (95)
 
+#define MAX_THROT (100)
+
+
+#define PROPORTIONAL (100.0f)
+#define INTEGRAL (0.1f)
+#define DERIVATIVE (450.0f)
+
+//known good PID values:
+//P = 95
+//I = 0.1
+//D = 450
 
 
 

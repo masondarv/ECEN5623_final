@@ -480,7 +480,7 @@ int main( int argc, char** argv )
 	frame.create(Size(FOV_WIDTH,FOV_HEIGHT),CV_8UC3);
 	blue_arrow_cnt =0;
 	//cntl=steering(260.0f,1.0f,10000.0f,95); //set PID parameters
-	cntl=steering(100.0f,0.1f,600.0f,MAX_THROT);
+	cntl=steering(PROPORTIONAL,INTEGRAL,DERIVATIVE,MAX_THROT);
 	/*set up pThreads*/
 	struct timeval current_time_val;
 	int i, rc, scope;

@@ -17,6 +17,9 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/highgui/highgui_c.h>
 
+#define TB_THRESHOLD (100) //the error value above which we apply braking, below which we do speed_var()
+
+
 using namespace cv;
 using namespace std;
 int steer_convert(double steer_original){
@@ -113,7 +116,7 @@ public:
         steer_original = d_param*(error-pre) + p_param * error + intergal * i_param;
 		steering_control = steer_convert(steer_original);
 		pre = error;
-		cout<<"           adj. error: "<<steering_control/32768.0<<endl;
+		
     }
 	
 	void speed_up(){
@@ -138,13 +141,23 @@ public:
 	
 	void speed_var(double error){
 		double scalar = fabs(1- fabs(error)/300.0);
-		throttle =(unsigned char)((scalar* (float )max_throttle));
-		braking =0x00;
+		
+		if(fabs(error)<TB_THRESHOLD)
+		{
+			throttle =(unsigned char)((scalar* (float )max_throttle));
+			braking =0x00;
+		}
+		else //error > 150
+		{
+			throttle =0;
+			braking =0x20;
+		}
 		//steer_original *=32768;
 		//unset = true;
 	}			
 	
 	void serial_update(int fd){
+		cout<<"           adj. error: "<<steering_control/32768.0<<endl;
 		string data_stream ="!"+to_string(steering_control)+"@"+to_string(throttle)+"#"+to_string(braking)+"$\n";
 		int wlen = write(fd, data_stream.c_str(), data_stream.size());
 		if (wlen != data_stream.size()) {
