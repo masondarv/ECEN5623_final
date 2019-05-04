@@ -62,6 +62,7 @@ double k_to_theta(double k){
 }
 
 double get_error (double k,double b){
+
 	double cut_height = FOV_HEIGHT - FOV_CUT_UPPERBOUND;
 	//double pos1 = (-b/k) - (double)(cut_height/2.0f);
 	double offset = (cut_height/2.0-b)/k - (double)(FOV_WIDTH/2.0f);
@@ -76,6 +77,10 @@ double get_error (double k,double b){
 	//cout << "k " << k << endl;
 	//cout <<"offset " << offset<<endl;
 	//cout <<"theta "<<theta<<endl;
+	
+	//double pos1 = (-b/k) - (double)(cut_height/2.0f);
+	//double pos2 = ((double)(FOV_WIDTH-b)/k - (double)(cut_height)/2.0f);
+	//return pos1*0.7+pos2*0.3;
 	return 0.8*(offset+theta*1.1);
 }
 

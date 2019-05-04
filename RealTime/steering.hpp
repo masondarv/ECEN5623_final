@@ -113,6 +113,7 @@ public:
         steer_original = d_param*(error-pre) + p_param * error + intergal * i_param;
 		steering_control = steer_convert(steer_original);
 		pre = error;
+		cout<<"           adj. error: "<<steering_control/32768.0<<endl;
     }
 	
 	void speed_up(){
@@ -123,17 +124,25 @@ public:
 	
 	void brake(){
 		throttle = 0;
-		braking =0x80;
+		braking =0x50;
 		steer_original *=32768;
 		unset = true;
 	}
 	
 	void speed_down(){
-		throttle =(unsigned char)(0.3*((float )max_throttle));
+		throttle =(unsigned char)(0.5*((float )max_throttle));
 		braking =0x00;
 		steer_original *=32768;
-		unset = true;
-	}		
+		//unset = true;
+	}	
+	
+	void speed_var(double error){
+		double scalar = fabs(1- fabs(error)/300.0);
+		throttle =(unsigned char)((scalar* (float )max_throttle));
+		braking =0x00;
+		//steer_original *=32768;
+		//unset = true;
+	}			
 	
 	void serial_update(int fd){
 		string data_stream ="!"+to_string(steering_control)+"@"+to_string(throttle)+"#"+to_string(braking)+"$\n";

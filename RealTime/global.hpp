@@ -22,6 +22,12 @@
 #define FOV_CUT_UPPERBOUND (235)
 
 #define MIN_BLUE_DETECTED_TO_SPEEDUP (100)
+#define HIGH_ERROR (150)
+#define MAX_THROT (95)
+
+
+
+
 using namespace cv;
 using namespace std;
 
@@ -35,5 +41,5 @@ int fd;
 VideoCapture cap;
 int blue_arrow_cnt;
 Point point1,point2;
-
+int exit_flag;
 #endif
