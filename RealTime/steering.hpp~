@@ -162,7 +162,7 @@ public:
 	}			
 	
 	void serial_update(int fd){
-		//cout<<"           Control Output: "<<steering_control<<endl;
+		cout<<"           Control Output: "<<steering_control<<endl;
 		string data_stream ="!"+to_string(steering_control)+"@"+to_string(throttle)+"#"+to_string(braking)+"$\n";
 		int wlen = write(fd, data_stream.c_str(), data_stream.size());
 		if (wlen != data_stream.size()) {

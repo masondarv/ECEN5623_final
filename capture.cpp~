@@ -236,7 +236,7 @@ int main( int argc, char** argv )
 		thre_points.clear();
 		for(int i=1;i<centroids.rows;i++){
 				
-			if(stats.at<int>(i,CC_STAT_AREA) >= 40){
+			if(stats.at<int>(i,CC_STAT_AREA) >= 30){
 				area_cnt++;
 				circle( labeled_area, Point((int)centroids.at<double>(i,0),(int)centroids.at<double>(i,1)),   2, Scalar(255,0,0), 1 );
 				thre_points.push_back(Point((int)centroids.at<double>(i,0),(int)centroids.at<double>(i,1)));

@@ -437,7 +437,7 @@ void *showProc_Service(void *threadp)
 		if(display_flag != 0)
 			imshow("line",frame);
 		else
-			imshow("blank",blank);		
+			imshow("line",blank);		
 		key=waitKey(1);
 		if(key == 'q')
 			exit_flag = 1;

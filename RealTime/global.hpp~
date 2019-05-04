@@ -46,7 +46,7 @@ using namespace std;
 
 vector<Mat> RGB_shared;
 Size ROI;
-Mat frame,labeled_area,blank;
+Mat frame,labeled_area;
 ExpMovingAverage k,b;
 steering cntl;
 int fd;

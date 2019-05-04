@@ -57,7 +57,7 @@ using namespace std;
 class ExpMovingAverage {
 public:
     ExpMovingAverage() {
-        this->alpha = 0.4;
+        this->alpha = 0.2;
 		unset = true;
     }
 	void clear() {
